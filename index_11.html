@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Contrataciones – OCASA Logística General</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --calypso:      #0099a8;
+      --calypso-alt:  #1DB4C2;
+      --calypso-dark: #056572;
+      --navy:         #000429;
+      --navy-mid:     #00063a;
+      --white:        #FAFAFA;
+      --gray-50:      #f4f6f8;
+      --gray-100:     #e8ecf0;
+      --gray-300:     #b0bac4;
+      --gray-500:     #6b7a8d;
+      --gray-700:     #374151;
+      --green:        #90bf4e;
+      --yellow:       #F7D954;
+      --red:          #e05252;
+      --font:         'Montserrat', sans-serif;
+      --radius:       12px;
+      --radius-lg:    18px;
+      --shadow-sm:    0 2px 8px rgba(0,0,0,.08);
+      --shadow-md:    0 4px 20px rgba(0,0,0,.12);
+      --shadow-lg:    0 8px 40px rgba(0,0,0,.18);
+      --transition:   .22s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ─── RESET ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: var(--font); background: var(--gray-50); color: var(--navy); }
+    button { cursor: pointer; font-family: var(--font); }
+    input, select, textarea { font-family: var(--font); }
+    a { text-decoration: none; }
+
+    /* ─── SCROLLBAR ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--gray-100); }
+    ::-webkit-scrollbar-thumb { background: var(--calypso); border-radius: 4px; }
+
+    /* ══════════════════════════════════════════════════════════ */
+    /*  LOGIN                                                     */
+    /* ══════════════════════════════════════════════════════════ */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: var(--navy);
+      background-image: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,153,168,.18) 0%, transparent 70%);
+      position: relative; overflow: hidden;
+    }
+    #login-screen::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230099a8' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    .login-card {
+      background: var(--white); border-radius: 20px;
+      padding: 44px 48px; width: 100%; max-width: 440px;
+      box-shadow: 0 24px 80px rgba(0,4,41,.55), 0 0 0 1px rgba(255,255,255,.06);
+      position: relative; z-index: 1;
+      animation: slideUp .55s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform: translateY(28px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .login-logo {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 30px;
+    }
+    .login-logo-text { font-size: 28px; font-weight: 800; letter-spacing: -.5px; color: var(--navy); }
+    .login-logo-text span { color: var(--calypso); }
+    .login-logo-arrow { color: var(--calypso); font-size: 26px; line-height: 1; }
+    .login-divider { width: 1px; height: 36px; background: var(--gray-300); margin: 0 4px; }
+    .login-subbrand { font-size: 10px; font-weight: 600; letter-spacing: 2px; color: var(--gray-500); line-height: 1.3; }
+    .login-title { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+    .login-sub   { font-size: 13px; color: var(--gray-500); margin-bottom: 32px; font-weight: 400; }
+    .login-field { margin-bottom: 18px; }
+    .login-field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: var(--gray-500); text-transform: uppercase; margin-bottom: 8px; }
+    .login-field input {
+      width: 100%; padding: 13px 16px; border: 1.5px solid var(--gray-100);
+      border-radius: var(--radius); font-size: 14px; color: var(--navy);
+      background: var(--gray-50); transition: var(--transition);
+      outline: none;
+    }
+    .login-field input:focus { border-color: var(--calypso); background: #fff; box-shadow: 0 0 0 3px rgba(0,153,168,.12); }
+    .login-btn {
+      width: 100%; padding: 15px; background: var(--calypso);
+      color: #fff; border: none; border-radius: var(--radius);
+      font-size: 15px; font-weight: 700; letter-spacing: .3px;
+      margin-top: 8px; transition: var(--transition);
+      box-shadow: 0 4px 20px rgba(0,153,168,.35);
+    }
+    .login-btn:hover { background: var(--calypso-dark); transform: translateY(-1px); box-shadow: 0 6px 28px rgba(0,153,168,.45); }
+    .login-btn:active { transform: translateY(0); }
+    .login-footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--gray-300); }
+    .login-error {
+      background: #fee; border: 1.5px solid #f5a; border-radius: 8px;
+      padding: 10px 14px; font-size: 13px; color: var(--red);
+      margin-bottom: 16px; display: none; font-weight: 500;
+    }
+
+    /* ══════════════════════════════════════════════════════════ */
+    /*  MAIN APP                                                  */
+    /* ══════════════════════════════════════════════════════════ */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+
+    /* ─── HEADER ─────────────────────────────────────────────── */
+    .header {
+      background: var(--navy); padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,4,41,.4);
+    }
+    .header-logo { display: flex; align-items: center; gap: 12px; }
+    .header-logo-text { font-size: 22px; font-weight: 800; letter-spacing: -.4px; color: #fff; }
+    .header-logo-text span { color: var(--calypso-alt); }
+    .header-divider { width: 1px; height: 28px; background: rgba(255,255,255,.2); }
+    .header-subbrand { font-size: 9px; font-weight: 600; letter-spacing: 2px; color: rgba(255,255,255,.5); line-height: 1.3; }
+    .header-right { display: flex; align-items: center; gap: 20px; }
+    .header-page-title { font-size: 13px; font-weight: 600; color: var(--calypso-alt); letter-spacing: .5px; }
+    .header-user {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,.06); padding: 7px 14px;
+      border-radius: 30px; border: 1px solid rgba(255,255,255,.1);
+    }
+    .header-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--calypso); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+    }
+    .header-username { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.85); }
+    .logout-btn {
+      background: none; border: 1px solid rgba(255,255,255,.15);
+      color: rgba(255,255,255,.6); padding: 6px 12px;
+      border-radius: 6px; font-size: 12px; font-weight: 600;
+      transition: var(--transition); letter-spacing: .3px;
+    }
+    .logout-btn:hover { border-color: var(--calypso-alt); color: var(--calypso-alt); }
+
+    /* ─── MAIN CONTENT ───────────────────────────────────────── */
+    .main { flex: 1; padding: 28px 32px; max-width: 1600px; width: 100%; margin: 0 auto; }
+
+    /* ─── TOOLBAR ────────────────────────────────────────────── */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .toolbar-title { font-size: 22px; font-weight: 700; color: var(--navy); }
+    .toolbar-title span { color: var(--calypso); }
+    .btn-new {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--calypso); color: #fff;
+      border: none; padding: 12px 22px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 700; letter-spacing: .3px;
+      box-shadow: 0 4px 16px rgba(0,153,168,.3); transition: var(--transition);
+    }
+    .btn-new:hover { background: var(--calypso-dark); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,153,168,.4); }
+    .btn-new svg { width: 16px; height: 16px; }
+
+    /* ─── SCORECARDS ─────────────────────────────────────────── */
+    .scores {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+      margin-bottom: 24px;
+    }
+    .score-card {
+      background: #fff; border-radius: var(--radius-lg); padding: 22px 24px;
+      box-shadow: var(--shadow-sm); border: 1.5px solid var(--gray-100);
+      position: relative; overflow: hidden; transition: var(--transition);
+    }
+    .score-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .score-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .score-card.c-total::before  { background: var(--calypso); }
+    .score-card.c-pend::before   { background: var(--yellow); }
+    .score-card.c-prog::before   { background: var(--green); }
+    .score-card.c-time::before   { background: var(--calypso-dark); }
+    .score-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px; font-size: 20px;
+    }
+    .score-card.c-total .score-icon { background: rgba(0,153,168,.1); }
+    .score-card.c-pend  .score-icon { background: rgba(247,217,84,.15); }
+    .score-card.c-prog  .score-icon { background: rgba(144,191,78,.12); }
+    .score-card.c-time  .score-icon { background: rgba(5,101,113,.1); }
+    .score-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--gray-500); margin-bottom: 6px; }
+    .score-value { font-size: 32px; font-weight: 800; color: var(--navy); line-height: 1; margin-bottom: 6px; }
+    .score-card.c-total .score-value { color: var(--calypso); }
+    .score-card.c-pend  .score-value { color: #b8920a; }
+    .score-card.c-prog  .score-value { color: #5a8a1e; }
+    .score-card.c-time  .score-value { color: var(--calypso-dark); }
+    .score-sub  { font-size: 12px; color: var(--gray-500); }
+
+    /* ─── FILTERS ────────────────────────────────────────────── */
+    .filters-bar {
+      background: #fff; border-radius: var(--radius-lg); padding: 18px 24px;
+      box-shadow: var(--shadow-sm); border: 1.5px solid var(--gray-100);
+      margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+    .filter-group label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); }
+    .filter-group select {
+      padding: 9px 12px; border: 1.5px solid var(--gray-100); border-radius: 8px;
+      font-size: 13px; color: var(--navy); background: var(--gray-50);
+      outline: none; transition: var(--transition); appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a8d' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px;
+    }
+    .filter-group select:focus { border-color: var(--calypso); background-color: #fff; box-shadow: 0 0 0 3px rgba(0,153,168,.1); }
+    .btn-clear {
+      background: none; border: 1.5px solid var(--gray-100); color: var(--gray-500);
+      padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      transition: var(--transition); align-self: flex-end;
+    }
+    .btn-clear:hover { border-color: var(--red); color: var(--red); }
+    .filter-count { font-size: 12px; color: var(--calypso); font-weight: 600; align-self: flex-end; padding-bottom: 10px; }
+
+    /* ─── TABLE SECTION ──────────────────────────────────────── */
+    .table-section {
+      background: #fff; border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm); border: 1.5px solid var(--gray-100);
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 18px 24px; border-bottom: 1.5px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .table-header h3 { font-size: 15px; font-weight: 700; color: var(--navy); }
+    .table-header .rec-count { font-size: 13px; color: var(--gray-500); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--gray-50); }
+    thead th {
+      padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .8px; color: var(--gray-500);
+      border-bottom: 1.5px solid var(--gray-100); white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--gray-100); transition: background var(--transition); }
+    tbody tr:hover { background: rgba(0,153,168,.04); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 13px 16px; color: var(--gray-700); white-space: nowrap; }
+    tbody td:first-child { font-weight: 600; color: var(--navy); }
+    .badge {
+      display: inline-flex; align-items: center; padding: 4px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .3px;
+    }
+    .badge-pend   { background: rgba(247,217,84,.2);  color: #8a6e00; }
+    .badge-prog   { background: rgba(29,180,194,.12); color: var(--calypso-dark); }
+    .badge-comp   { background: rgba(144,191,78,.15); color: #3d6e10; }
+    .badge-cancel { background: rgba(224,82,82,.1);   color: var(--red); }
+    .td-num { font-weight: 700; font-size: 14px; }
+    .td-days { color: var(--calypso-dark); font-weight: 600; }
+    .empty-state {
+      text-align: center; padding: 60px 24px; color: var(--gray-500);
+    }
+    .empty-state p { font-size: 15px; margin-top: 8px; }
+
+    /* ─── MODAL ──────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,4,41,.65); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 20px; width: 100%; max-width: 560px;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn .3s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform:scale(.94) translateY(20px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .modal-head {
+      padding: 24px 28px 20px; border-bottom: 1.5px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-head h2 { font-size: 18px; font-weight: 700; color: var(--navy); }
+    .modal-head p  { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px; border: none;
+      background: var(--gray-100); color: var(--gray-500); font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .modal-close:hover { background: var(--gray-700); color: #fff; }
+    .modal-body { padding: 24px 28px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row.full { grid-template-columns: 1fr; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); }
+    .form-field input, .form-field select, .form-field textarea {
+      padding: 11px 14px; border: 1.5px solid var(--gray-100); border-radius: 8px;
+      font-size: 13px; color: var(--navy); background: var(--gray-50); outline: none;
+      transition: var(--transition);
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+      border-color: var(--calypso); background: #fff; box-shadow: 0 0 0 3px rgba(0,153,168,.1);
+    }
+    .form-field select { appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a8d' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
+    }
+    .form-field textarea { resize: vertical; min-height: 80px; }
+    .char-counter { font-size: 11px; color: var(--gray-500); text-align: right; margin-top: -10px; }
+    .modal-foot {
+      padding: 20px 28px; border-top: 1.5px solid var(--gray-100);
+      display: flex; gap: 12px; justify-content: flex-end;
+    }
+    .btn-cancel {
+      padding: 11px 22px; border: 1.5px solid var(--gray-100); background: none;
+      border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--gray-500);
+      transition: var(--transition);
+    }
+    .btn-cancel:hover { border-color: var(--gray-300); color: var(--navy); }
+    .btn-submit {
+      padding: 11px 28px; background: var(--calypso); border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 700; color: #fff;
+      box-shadow: 0 4px 14px rgba(0,153,168,.3); transition: var(--transition);
+    }
+    .btn-submit:hover { background: var(--calypso-dark); transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* ─── TOAST ──────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 2000;
+      background: var(--navy); color: #fff;
+      padding: 14px 20px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+      box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px;
+      transform: translateY(80px); opacity: 0; transition: .35s cubic-bezier(.22,1,.36,1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success .toast-icon { color: var(--green); }
+    .toast.error   .toast-icon { color: var(--red); }
+
+    /* ─── CHECKBOX ───────────────────────────────────────────── */
+    .cb-cell { width: 40px; text-align: center; }
+    .row-cb {
+      width: 16px; height: 16px; cursor: pointer; accent-color: var(--calypso);
+      border-radius: 4px;
+    }
+    .cb-all { width: 16px; height: 16px; cursor: pointer; accent-color: var(--calypso); }
+    tbody tr.selected { background: rgba(0,153,168,.07) !important; }
+
+    /* ─── DELETE BUTTON ──────────────────────────────────────── */
+    .btn-delete {
+      display: none; align-items: center; gap: 8px;
+      background: var(--red); color: #fff; border: none;
+      padding: 12px 22px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 700; letter-spacing: .3px;
+      box-shadow: 0 4px 16px rgba(224,82,82,.3); transition: var(--transition);
+    }
+    .btn-delete.visible { display: flex; }
+    .btn-delete:hover { background: #c0392b; transform: translateY(-1px); }
+    .btn-delete svg { width: 16px; height: 16px; }
+    .sel-count {
+      font-size: 12px; color: var(--red); font-weight: 700;
+      align-self: center; display: none;
+    }
+    .sel-count.visible { display: block; }
+
+    /* ─── REQ ID ─────────────────────────────────────────────── */
+    .td-reqid { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: var(--calypso-dark); }
+    thead th.th-reqid { color: var(--calypso-dark); }
+
+    /* ─── GESTIONAR ALTAS BUTTON ────────────────────────────── */
+    .btn-altas {
+      display: none; align-items: center; gap: 8px;
+      background: var(--calypso-dark); color: #fff; border: none;
+      padding: 12px 22px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 700; letter-spacing: .3px;
+      box-shadow: 0 4px 16px rgba(5,101,113,.3); transition: var(--transition);
+    }
+    .btn-altas.visible { display: flex; }
+    .btn-altas:hover { background: var(--calypso); transform: translateY(-1px); }
+    .btn-altas svg { width: 16px; height: 16px; }
+
+    /* ─── ALTAS MODAL ────────────────────────────────────────── */
+    .modal-altas { max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; }
+    .modal-altas .modal-body { overflow-y: auto; flex: 1; }
+    .req-summary {
+      background: var(--gray-50); border: 1.5px solid var(--gray-100);
+      border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;
+      display: flex; flex-wrap: wrap; gap: 20px;
+    }
+    .req-summary-item { display: flex; flex-direction: column; gap: 2px; }
+    .req-summary-item .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); }
+    .req-summary-item .val { font-size: 13px; font-weight: 700; color: var(--navy); }
+    .req-summary-item .val.reqid { font-family: 'Courier New', monospace; color: var(--calypso-dark); }
+    .progress-bar-wrap { width: 100%; background: var(--gray-100); border-radius: 20px; height: 6px; margin-top: 6px; }
+    .progress-bar { height: 6px; border-radius: 20px; background: var(--calypso); transition: width .4s; }
+    .form-section-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;
+      color: var(--calypso-dark); border-bottom: 2px solid var(--calypso-dark);
+      padding-bottom: 6px; margin-bottom: 14px; margin-top: 4px;
+    }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .form-row-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .radio-group { display: flex; gap: 16px; align-items: center; padding-top: 2px; }
+    .radio-group label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--navy); cursor: pointer; }
+    .radio-group input[type=radio] { accent-color: var(--calypso); width: 15px; height: 15px; }
+    .altas-list-section { margin-top: 24px; }
+    .altas-list-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .altas-count-badge { background: var(--calypso); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .altas-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .altas-table thead { background: var(--navy); }
+    .altas-table thead th { color: #fff; padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; white-space: nowrap; }
+    .altas-table tbody tr { border-bottom: 1px solid var(--gray-100); }
+    .altas-table tbody tr:hover { background: rgba(0,153,168,.04); }
+    .altas-table tbody td { padding: 10px 12px; color: var(--gray-700); white-space: nowrap; }
+    .no-altas { text-align: center; padding: 24px; color: var(--gray-500); font-size: 13px; }
+    .sat-field { transition: opacity .2s; }
+    .sat-field.disabled { opacity: .4; pointer-events: none; }
+
+    /* ─── CONFIRM MODAL ──────────────────────────────────────── */
+    .confirm-modal { max-width: 420px; }
+    .confirm-body { padding: 28px; text-align: center; }
+    .confirm-icon { font-size: 44px; margin-bottom: 14px; }
+    .confirm-body h3 { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+    .confirm-body p  { font-size: 14px; color: var(--gray-500); line-height: 1.5; }
+    .confirm-foot {
+      padding: 0 28px 24px; display: flex; gap: 12px; justify-content: center;
+    }
+    .btn-confirm-yes {
+      padding: 11px 32px; background: var(--red); border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 700; color: #fff;
+      box-shadow: 0 4px 14px rgba(224,82,82,.3); transition: var(--transition);
+    }
+    .btn-confirm-yes:hover { background: #c0392b; }
+    .btn-confirm-no {
+      padding: 11px 32px; border: 1.5px solid var(--gray-100); background: none;
+      border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--gray-500);
+      transition: var(--transition);
+    }
+    .btn-confirm-no:hover { border-color: var(--gray-300); color: var(--navy); }
+
+    /* ─── SYNC & LOADING ─────────────────────────────────────── */
+    .loading-overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      background: var(--navy); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+    }
+    .loading-overlay.hidden { display: none; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid rgba(255,255,255,.1);
+      border-top-color: var(--calypso); border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .loading-msg { color: rgba(255,255,255,.7); font-size: 14px; font-weight: 600; }
+    .loading-sub { color: rgba(255,255,255,.35); font-size: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .sync-badge {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px; color: rgba(255,255,255,.45);
+      font-weight: 500;
+    }
+    .sync-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0; transition: background .3s;
+    }
+    .sync-dot.syncing { background: var(--yellow); animation: pulse 1s infinite; }
+    .sync-dot.error   { background: var(--red); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .btn-sync {
+      background: none; border: 1px solid rgba(255,255,255,.15);
+      color: rgba(255,255,255,.5); padding: 4px 8px; border-radius: 5px;
+      font-size: 11px; font-weight: 600; transition: var(--transition);
+    }
+    .btn-sync:hover { border-color: var(--calypso-alt); color: var(--calypso-alt); }
+
+    /* ─── REPORTING ──────────────────────────────────────────── */
+    .btn-reporting {
+      background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.2);
+      color: rgba(255,255,255,.85); padding: 8px 16px; border-radius: 8px;
+      font-size: 12px; font-weight: 700; letter-spacing: .5px;
+      transition: var(--transition); display: flex; align-items: center; gap: 7px;
+    }
+    .btn-reporting:hover, .btn-reporting.active {
+      background: var(--calypso); border-color: var(--calypso); color: #fff;
+    }
+    #reporting-panel { display: none; flex: 1; padding: 28px 32px; max-width: 1600px; width: 100%; margin: 0 auto; }
+    #reporting-panel.visible { display: block; }
+
+    .rep-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .rep-title { font-size: 22px; font-weight: 700; color: var(--navy); }
+    .rep-title span { color: var(--calypso); }
+
+    .rep-filters {
+      background: #fff; border-radius: var(--radius-lg); padding: 16px 22px;
+      box-shadow: var(--shadow-sm); border: 1.5px solid var(--gray-100);
+      margin-bottom: 22px; display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+    }
+
+    .rep-kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+    .rep-kpi {
+      background: #fff; border-radius: var(--radius-lg); padding: 18px 20px;
+      box-shadow: var(--shadow-sm); border: 1.5px solid var(--gray-100);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .rep-kpi-icon { font-size: 26px; flex-shrink: 0; }
+    .rep-kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); }
+    .rep-kpi-val { font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1.1; }
+    .rep-kpi-sub { font-size: 11px; color: var(--gray-500); }
+
+    .rep-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+    .rep-chart-card {
+      background: #fff; border-radius: var(--radius-lg); padding: 20px 24px;
+      box-shadow: var(--shadow-sm); border: 1.5px solid var(--gray-100);
+    }
+    .rep-chart-card.wide { grid-column: 1 / -1; }
+    .rep-chart-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .rep-chart-title span { color: var(--calypso); }
+
+    .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; }
+    .bar-label { font-size: 12px; font-weight: 600; color: var(--navy); width: 160px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+    .bar-label.suc { width: 120px; }
+    .bar-track { flex: 1; background: var(--gray-100); border-radius: 20px; height: 22px; position: relative; }
+    .bar-fill { height: 22px; border-radius: 20px; display: flex; align-items: center; padding-left: 8px; min-width: 28px; transition: width .5s cubic-bezier(.4,0,.2,1); }
+    .bar-fill.c1 { background: linear-gradient(90deg, var(--calypso-dark), var(--calypso)); }
+    .bar-fill.c2 { background: linear-gradient(90deg, #3d6e10, var(--green)); }
+    .bar-fill.c3 { background: linear-gradient(90deg, #8a6e00, var(--yellow)); }
+    .bar-fill.c4 { background: linear-gradient(90deg, #c0392b, var(--red)); }
+    .bar-val { font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap; }
+    .bar-meta { font-size: 11px; color: var(--gray-500); width: 50px; flex-shrink: 0; }
+
+    .rep-table-section {
+      background: #fff; border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm); border: 1.5px solid var(--gray-100); overflow: hidden;
+    }
+    .rep-table-header {
+      padding: 16px 22px; border-bottom: 1.5px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .rep-table-header h3 { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .btn-export {
+      display: flex; align-items: center; gap: 8px;
+      background: #1d6f42; color: #fff; border: none;
+      padding: 9px 18px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      box-shadow: 0 3px 10px rgba(29,111,66,.3); transition: var(--transition);
+    }
+    .btn-export:hover { background: #155231; transform: translateY(-1px); }
+    .btn-export svg { width: 15px; height: 15px; }
+    .rep-table-wrap { overflow-x: auto; }
+    .rep-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .rep-table thead { background: var(--navy); }
+    .rep-table thead th { color: rgba(255,255,255,.9); padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; white-space: nowrap; }
+    .rep-table tbody tr { border-bottom: 1px solid var(--gray-100); }
+    .rep-table tbody tr:hover { background: rgba(0,153,168,.04); }
+    .rep-table tbody td { padding: 10px 12px; color: var(--gray-700); white-space: nowrap; }
+    .rep-table tbody td:first-child { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: var(--calypso-dark); }
+    .no-data-rep { text-align: center; padding: 48px 24px; color: var(--gray-500); font-size: 14px; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────── */
+    @media(max-width: 900px) {
+      .scores { grid-template-columns: repeat(2, 1fr); }
+      .main { padding: 20px 16px; }
+      .header { padding: 0 16px; }
+    }
+    @media(max-width: 600px) {
+      .scores { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .login-card { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ LOGIN ════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div>
+        <span class="login-logo-text">OCASA<span>↗</span></span>
+      </div>
+      <div class="login-divider"></div>
+      <div class="login-subbrand">LOGÍSTICA<br>GENERAL</div>
+    </div>
+    <div class="login-title">Gestión de Contrataciones</div>
+    <div class="login-sub">Ingresá tus credenciales para continuar</div>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos.</div>
+    <div class="login-field">
+      <label>Usuario</label>
+      <input type="text" id="inp-user" placeholder="usuario" autocomplete="username" />
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-footer">OCASA Logística General — Acceso restringido</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ APP ══════ -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <span class="header-logo-text">OCASA<span>↗</span></span>
+      <div class="header-divider"></div>
+      <span class="header-subbrand">LOGÍSTICA<br>GENERAL</span>
+    </div>
+    <div class="header-right">
+      <div class="sync-badge">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-status">—</span>
+        <button class="btn-sync" onclick="syncNow()" title="Sincronizar con Sheets">🔄</button>
+      </div>
+      <button class="btn-reporting" id="btn-reporting" onclick="toggleReporting()">
+        📊 Reporting
+      </button>
+      <span class="header-page-title" id="header-page-title">Gestión de Contrataciones</span>
+      <div class="header-user">
+        <div class="header-avatar">OC</div>
+        <span class="header-username">ocasa</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <h1 class="toolbar-title">Panel de <span>Contrataciones</span></h1>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span class="sel-count" id="sel-count"></span>
+        <button class="btn-altas" id="btn-altas" onclick="openAltasPanel()">
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Gestionar Altas
+        </button>
+        <button class="btn-delete" id="btn-delete" onclick="confirmDeleteSelected()">
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Eliminar Requerimiento
+        </button>
+        <button class="btn-new" onclick="openModal()">
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Cargar Nuevo Requerimiento
+        </button>
+      </div>
+    </div>
+
+    <!-- SCORECARDS -->
+    <div class="scores">
+      <div class="score-card c-total">
+        <div class="score-icon">🚛</div>
+        <div class="score-label">Total Requeridos</div>
+        <div class="score-value" id="sc-total">—</div>
+        <div class="score-sub">vehículos solicitados</div>
+      </div>
+      <div class="score-card c-pend">
+        <div class="score-icon">⏳</div>
+        <div class="score-label">Pendientes</div>
+        <div class="score-value" id="sc-pend">—</div>
+        <div class="score-sub">sin asignar aún</div>
+      </div>
+      <div class="score-card c-prog">
+        <div class="score-icon">✅</div>
+        <div class="score-label">Contratados</div>
+        <div class="score-value" id="sc-cont">—</div>
+        <div class="score-sub">vehículos confirmados</div>
+      </div>
+      <div class="score-card c-time">
+        <div class="score-icon">📅</div>
+        <div class="score-label">Tiempo Promedio</div>
+        <div class="score-value" id="sc-days">—</div>
+        <div class="score-sub">días de contratación</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label>Período</label>
+        <select id="f-periodo" onchange="applyFilters()">
+          <option value="">Todos</option>
+          <option value="hoy">Hoy</option>
+          <option value="semana">Esta semana</option>
+          <option value="mes">Este mes</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Región</label>
+        <select id="f-region" onchange="onRegionChange()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Sucursal</label>
+        <select id="f-sucursal" onchange="applyFilters()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Categoría Vehículo</label>
+        <select id="f-cat" onchange="applyFilters()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Responsable</label>
+        <select id="f-resp" onchange="applyFilters()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Estado</label>
+        <select id="f-estado" onchange="applyFilters()">
+          <option value="">Todos</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="En Proceso">En Proceso</option>
+          <option value="Completado">Completado</option>
+        </select>
+      </div>
+      <button class="btn-clear" onclick="clearFilters()">Limpiar filtros</button>
+      <span class="filter-count" id="filter-count"></span>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-section">
+      <div class="table-header">
+        <h3>Detalle por Sucursal</h3>
+        <span class="rec-count" id="rec-count">—</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="cb-cell"><input type="checkbox" class="cb-all" id="cb-all" onchange="toggleAllCheckboxes(this)" title="Seleccionar todos"/></th>
+              <th class="th-reqid">ID Req.</th>
+              <th>Fecha Solicitud</th>
+              <th>Región</th>
+              <th>Sucursal</th>
+              <th>Categoría Vehículo</th>
+              <th>Cant. Req.</th>
+              <th>Cant. Cont.</th>
+              <th>Estado</th>
+              <th>Responsable</th>
+              <th>Días Cont.</th>
+              <th>Comentarios</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══════════════════════════════════ REPORTING PANEL ══════ -->
+  <div id="reporting-panel">
+
+    <div class="rep-toolbar">
+      <h1 class="rep-title">📊 <span>Reporting</span> de Contrataciones</h1>
+      <button class="btn-cancel" style="border-color:var(--gray-300)" onclick="toggleReporting()">← Volver al Panel</button>
+    </div>
+
+    <!-- Filtros Reporting -->
+    <div class="rep-filters">
+      <div class="filter-group">
+        <label>Período (Fecha Alta)</label>
+        <select id="rf-periodo" onchange="renderReporting()">
+          <option value="">Todos</option>
+          <option value="mes">Este mes</option>
+          <option value="semana">Esta semana</option>
+          <option value="hoy">Hoy</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Región</label>
+        <select id="rf-region" onchange="renderReporting()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Sucursal</label>
+        <select id="rf-sucursal" onchange="renderReporting()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Responsable</label>
+        <select id="rf-resp" onchange="renderReporting()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Tipo Contrato</label>
+        <select id="rf-contrato" onchange="renderReporting()">
+          <option value="">Todos</option>
+          <option value="CO Estándar">CO Estándar</option>
+          <option value="CO Eventual">CO Eventual</option>
+        </select>
+      </div>
+      <button class="btn-clear" onclick="clearRepFilters()">Limpiar</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="rep-kpis">
+      <div class="rep-kpi">
+        <div class="rep-kpi-icon">✅</div>
+        <div>
+          <div class="rep-kpi-label">Total Altas</div>
+          <div class="rep-kpi-val" id="rk-altas">—</div>
+          <div class="rep-kpi-sub">vehículos contratados</div>
+        </div>
+      </div>
+      <div class="rep-kpi">
+        <div class="rep-kpi-icon">⏱️</div>
+        <div>
+          <div class="rep-kpi-label">Días Promedio</div>
+          <div class="rep-kpi-val" id="rk-dias">—</div>
+          <div class="rep-kpi-sub">para completar alta</div>
+        </div>
+      </div>
+      <div class="rep-kpi">
+        <div class="rep-kpi-icon">⏳</div>
+        <div>
+          <div class="rep-kpi-label">Unidades Pendientes</div>
+          <div class="rep-kpi-val" id="rk-pend">—</div>
+          <div class="rep-kpi-sub">sin contratar aún</div>
+        </div>
+      </div>
+      <div class="rep-kpi">
+        <div class="rep-kpi-icon">📋</div>
+        <div>
+          <div class="rep-kpi-label">Requerimientos</div>
+          <div class="rep-kpi-val" id="rk-reqs">—</div>
+          <div class="rep-kpi-sub">en el período</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row 1 -->
+    <div class="rep-charts">
+      <div class="rep-chart-card">
+        <div class="rep-chart-title">✅ Altas por <span>Responsable</span></div>
+        <div class="bar-chart" id="chart-resp-altas"></div>
+      </div>
+      <div class="rep-chart-card">
+        <div class="rep-chart-title">⏱️ Días Promedio por <span>Responsable</span></div>
+        <div class="bar-chart" id="chart-resp-dias"></div>
+      </div>
+      <div class="rep-chart-card">
+        <div class="rep-chart-title">⏳ Pendientes por <span>Responsable</span></div>
+        <div class="bar-chart" id="chart-resp-pend"></div>
+      </div>
+      <div class="rep-chart-card">
+        <div class="rep-chart-title">🏢 Altas por <span>Sucursal</span></div>
+        <div class="bar-chart" id="chart-suc-altas"></div>
+      </div>
+    </div>
+
+    <!-- Tabla detalle de altas -->
+    <div class="rep-table-section">
+      <div class="rep-table-header">
+        <div>
+          <h3>Detalle de Altas por Analista</h3>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:3px" id="rep-rec-count">—</div>
+        </div>
+        <button class="btn-export" onclick="exportToExcel()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Exportar Excel (.xlsx)
+        </button>
+      </div>
+      <div class="rep-table-wrap">
+        <table class="rep-table">
+          <thead>
+            <tr>
+              <th>ID Req.</th>
+              <th>Fecha Req.</th>
+              <th>Región</th>
+              <th>Sucursal</th>
+              <th>Categoría</th>
+              <th>Fecha Alta</th>
+              <th>Días</th>
+              <th>Patente</th>
+              <th>Transportista</th>
+              <th>Chofer</th>
+              <th>DNI</th>
+              <th>Celular</th>
+              <th>Email</th>
+              <th>Responsable</th>
+              <th>Satelital</th>
+              <th>Cía Sat.</th>
+              <th>Contrato</th>
+              <th>ID Transp.</th>
+              <th>ID Chofer</th>
+              <th>ID Vehículo</th>
+              <th>Comentarios</th>
+            </tr>
+          </thead>
+          <tbody id="rep-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /reporting-panel -->
+
+</div><!-- /app -->
+
+<!-- ═══════════════════════════════════════════════ MODAL ════ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>Cargar Nuevo Requerimiento</h2>
+        <p>Completá los datos del vehículo solicitado</p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label>Fecha de Solicitud *</label>
+          <input type="date" id="m-fecha" />
+        </div>
+        <div class="form-field">
+          <label>Región *</label>
+          <select id="m-region" onchange="onModalRegionChange()">
+            <option value="">Seleccionar región...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Sucursal Destino *</label>
+          <select id="m-sucursal">
+            <option value="">Seleccionar sucursal...</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Responsable *</label>
+          <select id="m-resp">
+            <option value="">Seleccionar responsable...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Tipo de Vehículo *</label>
+          <select id="m-tipo">
+            <option value="">Seleccionar tipo...</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Cantidad *</label>
+          <input type="number" id="m-cant" min="1" max="99" placeholder="0" />
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label>Comentarios adicionales</label>
+          <textarea id="m-comentarios" maxlength="100" placeholder="Aclaraciones opcionales..." oninput="updateCharCount()"></textarea>
+          <div class="char-counter"><span id="char-count">0</span>/100</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-submit" id="btn-submit" onclick="submitRequerimiento()">Guardar Requerimiento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ ALTAS MODAL ════ -->
+<div class="modal-overlay" id="modal-altas">
+  <div class="modal modal-altas">
+    <div class="modal-head">
+      <div>
+        <h2>Gestionar Altas de Vehículos</h2>
+        <p id="altas-head-sub">Registrá un nuevo vehículo contratado para este requerimiento</p>
+      </div>
+      <button class="modal-close" onclick="closeAltasPanel()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Resumen del requerimiento -->
+      <div class="req-summary" id="altas-req-summary"></div>
+
+      <!-- Formulario nueva alta -->
+      <div class="form-section-title">➕ Nueva Alta de Vehículo</div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Fecha de Alta *</label>
+          <input type="date" id="a-fecha" />
+        </div>
+        <div class="form-field">
+          <label>Patente *</label>
+          <input type="text" id="a-patente" placeholder="Ej: AA123BB" maxlength="8" style="text-transform:uppercase"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Razón Social Transportista *</label>
+          <input type="text" id="a-razonsocial" placeholder="Nombre empresa o autónomo"/>
+        </div>
+        <div class="form-field">
+          <label>Nombre y Apellido Chofer *</label>
+          <input type="text" id="a-chofer" placeholder="Ej: Juan Pérez"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>DNI del Chofer *</label>
+          <input type="text" id="a-dni" placeholder="Sin puntos" maxlength="9"/>
+        </div>
+        <div class="form-field">
+          <label>Celular para Citación *</label>
+          <input type="text" id="a-celular" placeholder="Ej: 11 1234-5678"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Correo Electrónico</label>
+          <input type="email" id="a-email" placeholder="chofer@email.com"/>
+        </div>
+        <div class="form-field">
+          <label>Responsable *</label>
+          <select id="a-resp">
+            <option value="">Seleccionar...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>¿Instaló Equipo Satelital? *</label>
+          <div class="radio-group">
+            <label><input type="radio" name="satelital" value="SI" onchange="toggleSatelital(this)"/> Sí</label>
+            <label><input type="radio" name="satelital" value="NO" onchange="toggleSatelital(this)" checked/> No</label>
+          </div>
+        </div>
+        <div class="form-field sat-field disabled" id="sat-company-wrap">
+          <label>Compañía Satelital</label>
+          <select id="a-sat-company">
+            <option value="">Seleccionar...</option>
+            <option value="STOPCAR">STOPCAR</option>
+            <option value="ITURAN">ITURAN</option>
+            <option value="LOJACK">LOJACK</option>
+            <option value="OTRA">OTRA</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Tipo de Contrato *</label>
+          <select id="a-contrato">
+            <option value="">Seleccionar...</option>
+            <option value="CO Estándar">CO Estándar</option>
+            <option value="CO Eventual">CO Eventual</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>ID Transportista *</label>
+          <input type="text" id="a-id-transp" placeholder="Ej: T-00123"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>ID Chofer *</label>
+          <input type="text" id="a-id-chofer" placeholder="Ej: C-00456"/>
+        </div>
+        <div class="form-field">
+          <label>ID Vehículo *</label>
+          <input type="text" id="a-id-vehiculo" placeholder="Ej: V-00789"/>
+        </div>
+      </div>
+
+      <div class="form-row full">
+        <div class="form-field">
+          <label>Comentarios Adicionales</label>
+          <textarea id="a-comentarios" maxlength="200" placeholder="Aclaraciones opcionales..."></textarea>
+        </div>
+      </div>
+
+      <!-- Lista de altas ya registradas -->
+      <div class="altas-list-section">
+        <div class="altas-list-title">
+          Altas ya registradas
+          <span class="altas-count-badge" id="altas-badge">0</span>
+        </div>
+        <div id="altas-list-container">
+          <div class="no-altas">No hay altas registradas para este requerimiento.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeAltasPanel()">Cerrar</button>
+      <button class="btn-submit" id="btn-grabar-alta" onclick="submitAlta()">
+        ✔ Grabar Alta
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CONFIRM MODAL ════ -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal confirm-modal">
+    <div class="confirm-body">
+      <div class="confirm-icon">🗑️</div>
+      <h3>¿Estás seguro?</h3>
+      <p id="confirm-msg">Esta acción eliminará los requerimientos seleccionados y no se puede deshacer.</p>
+    </div>
+    <div class="confirm-foot">
+      <button class="btn-confirm-no" onclick="closeConfirm()">No</button>
+      <button class="btn-confirm-yes" onclick="executeDelete()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon">✓</span>
+  <span id="toast-msg">Requerimiento guardado correctamente.</span>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════════════════════ */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbuGL70eQ-seqVRRMQbmy6iDd_9SunI9oSn5WPdfqWIxdzBvNDc3YJyWi7Q2joLwQ/exec';
+
+/* ═══════════════════════════════════════════════════════════════
+   DATOS MAESTROS
+═══════════════════════════════════════════════════════════════ */
+const REGIONES_SUCURSALES = {
+  'AMBA':   ['Plaza Logistica','Iriarte','Avellaneda','Otto Krause','Sarandi','Tortuguitas','CBN I'],
+  'IBUE':   ['Azul','Mar del Plata','Bahia Blanca'],
+  'CENTRO': ['Cordoba - Circ','Rio Cuarto','San Francisco','Villa Maria','La Carlota','Cordoba - La Voz','Cordoba - Renault'],
+  'CUYO':   ['San Juan','Catamarca','La Rioja','San Luis','Mendoza'],
+  'NEA':    ['Santa Fe','Rosario','Parana','Formosa','Corrientes','Posadas','Resistencia','Rafaela'],
+  'NOA':    ['WH Salta Insumos','Stgo del Estero','WH Salta Salud','Jujuy','Tucuman'],
+  'SUR':    ['Com. Rivadavia','Ushuaia','Rio Gallegos','Neuquen','Santa Rosa','Viedma','Trelew','Esquel','Rio Grande']
+};
+
+const RESPONSABLES = [
+  'Paula Perez','Federico Chiapa','Martin Torno','Fernando Chocron',
+  'Lucas Cornejo','Jazming Magallanes','Julian Alvez','Pablo Viera','Javier Ibañez'
+];
+
+const CATEGORIAS = [
+  'Moto','Automovil','Utilitario - 700kg','Utilitario - 1500kg',
+  'Utilitario - 2500kg','Utilitario - 3000kg','Chasis 5TN','Chasis 5TN C/Pala',
+  'Chasis 7.5TN','Chasis 7.5TN C/Pala','Chasis 10TN','Chasis 10TN C/Pala',
+  'Chasis 12 TN','Chasis 12 TN C/Pala','Balancin','Equipo TR+Semi'
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN
+═══════════════════════════════════════════════════════════════ */
+const CREDS = { user: 'ocasa', pass: 'contrataciones2026' };
+
+function doLogin() {
+  const u = document.getElementById('inp-user').value.trim();
+  const p = document.getElementById('inp-pass').value;
+  const err = document.getElementById('login-error');
+  if (u === CREDS.user && p === CREDS.pass) {
+    err.style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initApp();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('inp-pass').value = '';
+  }
+}
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('inp-pass').value = '';
+}
+
+document.getElementById('inp-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('inp-user').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+/* ═══════════════════════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════════════════════ */
+let ALL_DATA = [];
+let FILTERED  = [];
+
+/* ═══════════════════════════════════════════════════════════════
+   REQ ID COUNTER
+═══════════════════════════════════════════════════════════════ */
+function getNextReqId() {
+  let counter = parseInt(localStorage.getItem('ocasa_req_counter') || '0') + 1;
+  localStorage.setItem('ocasa_req_counter', counter);
+  return 'REQ' + String(counter).padStart(3, '0');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT & SHEETS SYNC
+═══════════════════════════════════════════════════════════════ */
+function saveData() {
+  localStorage.setItem('ocasa_contrataciones', JSON.stringify(ALL_DATA));
+}
+
+function setSyncState(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-status');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  txt.textContent = msg;
+}
+
+async function loadFromSheets() {
+  const url = APPS_SCRIPT_URL;
+  if (!url || url.includes('TU_SCRIPT_ID')) {
+    setSyncState('error', 'Sin URL configurada');
+    return false;
+  }
+  setSyncState('syncing', 'Sincronizando...');
+  try {
+    const ctrl  = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const resp  = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+    clearTimeout(timer);
+    const data  = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'Error en Sheets');
+    ALL_DATA = data.reqs || [];
+    saveData();
+    const now = new Date();
+    setSyncState('ok', `Sync ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`);
+    return true;
+  } catch(err) {
+    console.warn('Sheets load failed, using cache:', err.message);
+    const cached = localStorage.getItem('ocasa_contrataciones');
+    ALL_DATA = cached ? JSON.parse(cached) : [];
+    setSyncState('error', err.name === 'AbortError' ? 'Timeout – caché local' : 'Sin conexión – caché local');
+    return false;
+  }
+}
+
+async function syncToSheets(action, payload) {
+  const url = APPS_SCRIPT_URL;
+  if (!url || url.includes('TU_SCRIPT_ID')) return;
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 10000);
+    await fetch(url, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...payload }),
+      signal: ctrl.signal
+    });
+  } catch(err) { console.warn('Sheets POST failed (local OK):', err.message); }
+}
+
+async function syncNow() {
+  const ok = await loadFromSheets();
+  if (ok) { applyFilters(); if (REPORTING_ACTIVE) renderReporting(); }
+}
+
+async function initApp() {
+  // 1. Dashboard visible inmediatamente con caché
+  const cached = localStorage.getItem('ocasa_contrataciones');
+  ALL_DATA = cached ? JSON.parse(cached) : [];
+
+  populateFilters();
+  populateModalDropdowns();
+  applyFilters();
+  document.getElementById('m-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('loading-overlay').classList.add('hidden');
+
+  // 2. Sync con Sheets en background (no bloquea)
+  if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes('TU_SCRIPT_ID')) {
+    loadFromSheets().then(ok => { if (ok) { applyFilters(); if (REPORTING_ACTIVE) renderReporting(); } });
+  } else {
+    setSyncState('error', 'Sin URL configurada');
+  }
+
+  // 3. Auto-refresh cada 60 s
+  setInterval(() => {
+    loadFromSheets().then(ok => { if (ok) { applyFilters(); if (REPORTING_ACTIVE) renderReporting(); } });
+  }, 60000);
+
+  // 4. Sync al recuperar foco
+  window.addEventListener('focus', () => {
+    loadFromSheets().then(ok => { if (ok) { applyFilters(); if (REPORTING_ACTIVE) renderReporting(); } });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DROPDOWNS
+═══════════════════════════════════════════════════════════════ */
+function populateFilters() {
+  const fReg = document.getElementById('f-region');
+  fReg.innerHTML = '<option value="">Todas</option>';
+  Object.keys(REGIONES_SUCURSALES).forEach(r => fReg.innerHTML += `<option value="${r}">${r}</option>`);
+
+  const fSuc = document.getElementById('f-sucursal');
+  fSuc.innerHTML = '<option value="">Todas</option>';
+  Object.values(REGIONES_SUCURSALES).flat().sort().forEach(s => fSuc.innerHTML += `<option value="${s}">${s}</option>`);
+
+  const fCat = document.getElementById('f-cat');
+  fCat.innerHTML = '<option value="">Todas</option>';
+  CATEGORIAS.forEach(c => fCat.innerHTML += `<option value="${c}">${c}</option>`);
+
+  const fResp = document.getElementById('f-resp');
+  fResp.innerHTML = '<option value="">Todos</option>';
+  RESPONSABLES.forEach(r => fResp.innerHTML += `<option value="${r}">${r}</option>`);
+}
+
+function populateModalDropdowns() {
+  const mReg = document.getElementById('m-region');
+  mReg.innerHTML = '<option value="">Seleccionar región...</option>';
+  Object.keys(REGIONES_SUCURSALES).forEach(r => mReg.innerHTML += `<option value="${r}">${r}</option>`);
+
+  const mTipo = document.getElementById('m-tipo');
+  mTipo.innerHTML = '<option value="">Seleccionar tipo...</option>';
+  CATEGORIAS.forEach(c => mTipo.innerHTML += `<option value="${c}">${c}</option>`);
+
+  const mResp = document.getElementById('m-resp');
+  mResp.innerHTML = '<option value="">Seleccionar responsable...</option>';
+  RESPONSABLES.forEach(r => mResp.innerHTML += `<option value="${r}">${r}</option>`);
+}
+
+function onRegionChange() {
+  const region = document.getElementById('f-region').value;
+  const fSuc = document.getElementById('f-sucursal');
+  fSuc.innerHTML = '<option value="">Todas</option>';
+  const sucursales = region ? REGIONES_SUCURSALES[region] : Object.values(REGIONES_SUCURSALES).flat().sort();
+  sucursales.forEach(s => fSuc.innerHTML += `<option value="${s}">${s}</option>`);
+  applyFilters();
+}
+
+function onModalRegionChange() {
+  const region = document.getElementById('m-region').value;
+  const mSuc = document.getElementById('m-sucursal');
+  mSuc.innerHTML = '<option value="">Seleccionar sucursal...</option>';
+  if (region) REGIONES_SUCURSALES[region].forEach(s => mSuc.innerHTML += `<option value="${s}">${s}</option>`);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FILTERS & TABLE
+═══════════════════════════════════════════════════════════════ */
+function applyFilters() {
+  const periodo  = document.getElementById('f-periodo').value;
+  const region   = document.getElementById('f-region').value;
+  const sucursal = document.getElementById('f-sucursal').value;
+  const cat      = document.getElementById('f-cat').value;
+  const resp     = document.getElementById('f-resp').value;
+  const estado   = document.getElementById('f-estado').value;
+  const today    = new Date(); today.setHours(0,0,0,0);
+
+  FILTERED = ALL_DATA.filter(row => {
+    const rowDate = new Date(row.fecha + 'T00:00:00');
+    if (periodo === 'hoy'    && rowDate.toDateString() !== today.toDateString()) return false;
+    if (periodo === 'semana' && rowDate < new Date(today.getTime() - 6*86400000)) return false;
+    if (periodo === 'mes'    && rowDate < new Date(today.getTime() - 29*86400000)) return false;
+    if (region   && row.region      !== region)   return false;
+    if (sucursal && row.sucursal    !== sucursal)  return false;
+    if (cat      && row.categoria   !== cat)       return false;
+    if (resp     && row.responsable !== resp)       return false;
+    if (estado   && row.estado      !== estado)    return false;
+    return true;
+  });
+
+  FILTERED.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  clearSelectionUI();
+  renderScores();
+  renderTable();
+}
+
+function clearFilters() {
+  ['f-periodo','f-region','f-sucursal','f-cat','f-resp','f-estado'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  populateFilters();
+  applyFilters();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCORECARDS
+═══════════════════════════════════════════════════════════════ */
+function renderScores() {
+  const totalReq  = FILTERED.reduce((s,r) => s + r.cantReq, 0);
+  const totalPend = FILTERED.reduce((s,r) => s + Math.max(0, r.cantReq - r.cantCont), 0);
+  const totalCont = FILTERED.reduce((s,r) => s + r.cantCont, 0);
+  const withDays  = FILTERED.filter(r => r.dias !== null);
+  const avgDays   = withDays.length ? (withDays.reduce((s,r) => s + r.dias, 0) / withDays.length).toFixed(1) : '—';
+
+  document.getElementById('sc-total').textContent = totalReq;
+  document.getElementById('sc-pend').textContent  = totalPend;
+  document.getElementById('sc-cont').textContent  = totalCont;
+  document.getElementById('sc-days').textContent  = avgDays !== '—' ? avgDays + 'd' : '—';
+
+  const hasFilters = ['f-periodo','f-region','f-sucursal','f-cat','f-resp','f-estado']
+    .some(id => document.getElementById(id).value !== '');
+  document.getElementById('filter-count').textContent = hasFilters
+    ? `Mostrando ${FILTERED.length} de ${ALL_DATA.length} registros` : '';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLE RENDER
+═══════════════════════════════════════════════════════════════ */
+function badgeClass(estado) {
+  if (estado === 'Pendiente')  return 'badge badge-pend';
+  if (estado === 'En Proceso') return 'badge badge-prog';
+  if (estado === 'Completado') return 'badge badge-comp';
+  return 'badge badge-cancel';
+}
+function formatDate(d) {
+  if (!d) return '—';
+  // Handle ISO datetime strings from Google Sheets (e.g. "2026-04-06T03:00:00.000Z")
+  const clean = String(d).substring(0, 10); // take only "YYYY-MM-DD"
+  const [y, m, day] = clean.split('-');
+  if (!y || !m || !day) return String(d);
+  return `${day}/${m}/${y}`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  document.getElementById('rec-count').textContent = `${FILTERED.length} registros`;
+  document.getElementById('cb-all').checked = false;
+
+  if (!FILTERED.length) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
+      <div style="font-size:36px">📋</div>
+      <p>No hay requerimientos cargados aún. Usá el botón <strong>Cargar Nuevo Requerimiento</strong>.</p>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = FILTERED.map(r => `
+    <tr id="row-${r.reqId}">
+      <td class="cb-cell"><input type="checkbox" class="row-cb" value="${r.reqId}" onchange="onCheckboxChange()"/></td>
+      <td class="td-reqid">${r.reqId}</td>
+      <td>${formatDate(r.fecha)}</td>
+      <td>${r.region}</td>
+      <td>${r.sucursal}</td>
+      <td>${r.categoria}</td>
+      <td class="td-num">${r.cantReq}</td>
+      <td class="td-num">${r.cantCont}</td>
+      <td><span class="${badgeClass(r.estado)}">${r.estado}</span></td>
+      <td>${r.responsable}</td>
+      <td class="td-days">${r.dias !== null ? r.dias + 'd' : '—'}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;color:var(--gray-500);font-style:${r.comentarios?'normal':'italic'}">${r.comentarios || 'Sin comentarios'}</td>
+    </tr>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHECKBOX LOGIC
+═══════════════════════════════════════════════════════════════ */
+function getSelectedIds() {
+  return [...document.querySelectorAll('.row-cb:checked')].map(cb => cb.value);
+}
+
+function onCheckboxChange() {
+  const selected = getSelectedIds();
+  const btnDel   = document.getElementById('btn-delete');
+  const btnAltas = document.getElementById('btn-altas');
+  const selCount = document.getElementById('sel-count');
+
+  // highlight selected rows
+  document.querySelectorAll('.row-cb').forEach(cb => {
+    const row = document.getElementById('row-' + cb.value);
+    if (row) row.classList.toggle('selected', cb.checked);
+  });
+
+  if (selected.length > 0) {
+    btnDel.classList.add('visible');
+    selCount.classList.add('visible');
+    selCount.textContent = `${selected.length} seleccionado${selected.length > 1 ? 's' : ''}`;
+  } else {
+    btnDel.classList.remove('visible');
+    selCount.classList.remove('visible');
+  }
+
+  // Gestionar Altas: solo disponible cuando se selecciona exactamente 1
+  if (selected.length === 1) {
+    btnAltas.classList.add('visible');
+  } else {
+    btnAltas.classList.remove('visible');
+  }
+
+  const allCbs = document.querySelectorAll('.row-cb');
+  document.getElementById('cb-all').checked = allCbs.length > 0 && selected.length === allCbs.length;
+}
+
+function toggleAllCheckboxes(masterCb) {
+  document.querySelectorAll('.row-cb').forEach(cb => { cb.checked = masterCb.checked; });
+  onCheckboxChange();
+}
+
+function clearSelectionUI() {
+  document.getElementById('btn-delete').classList.remove('visible');
+  document.getElementById('btn-altas').classList.remove('visible');
+  document.getElementById('sel-count').classList.remove('visible');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DELETE LOGIC
+═══════════════════════════════════════════════════════════════ */
+function confirmDeleteSelected() {
+  const ids = getSelectedIds();
+  if (!ids.length) return;
+  const n = ids.length;
+  document.getElementById('confirm-msg').textContent =
+    `¿Estás seguro de borrar ${n === 1 ? 'el requerimiento seleccionado' : `los ${n} requerimientos seleccionados`}? Esta acción no se puede deshacer.`;
+  document.getElementById('modal-confirm').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('modal-confirm').classList.remove('open');
+}
+
+function executeDelete() {
+  const ids = getSelectedIds();
+  ALL_DATA = ALL_DATA.filter(r => !ids.includes(r.reqId));
+  saveData();
+  syncToSheets('delete_reqs', { ids });
+  closeConfirm();
+  applyFilters();
+  showToast(`${ids.length} requerimiento${ids.length > 1 ? 's eliminados' : ' eliminado'} correctamente.`, true);
+}
+
+document.getElementById('modal-confirm').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-confirm')) closeConfirm();
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   MODAL NUEVO REQUERIMIENTO
+═══════════════════════════════════════════════════════════════ */
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('m-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('m-region').value = '';
+  document.getElementById('m-sucursal').innerHTML = '<option value="">Seleccionar sucursal...</option>';
+  document.getElementById('m-tipo').value = '';
+  document.getElementById('m-cant').value = '';
+  document.getElementById('m-resp').value = '';
+  document.getElementById('m-comentarios').value = '';
+  updateCharCount();
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+function updateCharCount() {
+  document.getElementById('char-count').textContent = document.getElementById('m-comentarios').value.length;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SUBMIT
+═══════════════════════════════════════════════════════════════ */
+async function submitRequerimiento() {
+  const fecha    = document.getElementById('m-fecha').value;
+  const region   = document.getElementById('m-region').value;
+  const sucursal = document.getElementById('m-sucursal').value;
+  const tipo     = document.getElementById('m-tipo').value;
+  const cant     = parseInt(document.getElementById('m-cant').value);
+  const resp     = document.getElementById('m-resp').value;
+  const coment   = document.getElementById('m-comentarios').value.trim();
+
+  if (!fecha || !region || !sucursal || !tipo || !cant || !resp) {
+    showToast('Completá todos los campos obligatorios.', false); return;
+  }
+  if (isNaN(cant) || cant < 1) {
+    showToast('La cantidad debe ser un número mayor a 0.', false); return;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  const reqId = getNextReqId();
+  const newRow = {
+    reqId, id: Date.now(),
+    fecha, region, sucursal, categoria: tipo,
+    cantReq: cant, cantCont: 0, estado: 'Pendiente',
+    responsable: resp, dias: null, comentarios: coment
+  };
+
+  ALL_DATA.unshift(newRow);
+  saveData();
+  syncToSheets('new_req', { req: newRow });
+
+  btn.disabled = false; btn.textContent = 'Guardar Requerimiento';
+  closeModal();
+  applyFilters();
+  showToast(`Requerimiento ${reqId} guardado correctamente.`, true);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GESTIONAR ALTAS
+═══════════════════════════════════════════════════════════════ */
+let CURRENT_REQ_ID = null; // requerimiento activo en el panel de altas
+
+function openAltasPanel() {
+  const ids = getSelectedIds();
+  if (ids.length !== 1) return;
+  CURRENT_REQ_ID = ids[0];
+  const req = ALL_DATA.find(r => r.reqId === CURRENT_REQ_ID);
+  if (!req) return;
+
+  // Populate responsable dropdown
+  const aResp = document.getElementById('a-resp');
+  aResp.innerHTML = '<option value="">Seleccionar...</option>';
+  RESPONSABLES.forEach(r => aResp.innerHTML += `<option value="${r}">${r}</option>`);
+
+  // Pre-select same responsable as the requerimiento
+  if (req.responsable) aResp.value = req.responsable;
+
+  // Default fecha alta = today
+  document.getElementById('a-fecha').value = new Date().toISOString().split('T')[0];
+
+  // Clear form
+  ['a-patente','a-razonsocial','a-chofer','a-dni','a-celular','a-email',
+   'a-id-transp','a-id-chofer','a-id-vehiculo','a-comentarios'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('a-contrato').value = '';
+  document.getElementById('a-sat-company').value = '';
+  document.querySelectorAll('input[name="satelital"]').forEach(r => r.checked = r.value === 'NO');
+  document.getElementById('sat-company-wrap').classList.add('disabled');
+
+  // Render summary
+  renderAltasSummary(req);
+  // Render existing altas
+  renderAltasList(req);
+
+  document.getElementById('modal-altas').classList.add('open');
+}
+
+function closeAltasPanel() {
+  document.getElementById('modal-altas').classList.remove('open');
+  CURRENT_REQ_ID = null;
+}
+
+document.getElementById('modal-altas').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-altas')) closeAltasPanel();
+});
+
+function toggleSatelital(radio) {
+  const wrap = document.getElementById('sat-company-wrap');
+  if (radio.value === 'SI') {
+    wrap.classList.remove('disabled');
+  } else {
+    wrap.classList.add('disabled');
+    document.getElementById('a-sat-company').value = '';
+  }
+}
+
+function renderAltasSummary(req) {
+  const altas = req.altas || [];
+  const pct   = req.cantReq > 0 ? Math.round((req.cantCont / req.cantReq) * 100) : 0;
+  const pendientes = req.cantReq - req.cantCont;
+
+  document.getElementById('altas-head-sub').textContent =
+    `${req.sucursal} — ${req.categoria} — ${req.cantCont} de ${req.cantReq} contratado${req.cantReq > 1 ? 's' : ''}`;
+
+  document.getElementById('altas-req-summary').innerHTML = `
+    <div class="req-summary-item">
+      <span class="lbl">ID Requerimiento</span>
+      <span class="val reqid">${req.reqId}</span>
+    </div>
+    <div class="req-summary-item">
+      <span class="lbl">Sucursal</span>
+      <span class="val">${req.sucursal}</span>
+    </div>
+    <div class="req-summary-item">
+      <span class="lbl">Región</span>
+      <span class="val">${req.region}</span>
+    </div>
+    <div class="req-summary-item">
+      <span class="lbl">Categoría</span>
+      <span class="val">${req.categoria}</span>
+    </div>
+    <div class="req-summary-item">
+      <span class="lbl">Fecha Solicitud</span>
+      <span class="val">${formatDate(req.fecha)}</span>
+    </div>
+    <div class="req-summary-item">
+      <span class="lbl">Contratados / Requeridos</span>
+      <span class="val">${req.cantCont} / ${req.cantReq}</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" style="width:${pct}%"></div>
+      </div>
+    </div>
+    <div class="req-summary-item">
+      <span class="lbl">Pendientes</span>
+      <span class="val" style="color:${pendientes > 0 ? '#b8920a' : '#5a8a1e'}">${pendientes}</span>
+    </div>
+    <div class="req-summary-item">
+      <span class="lbl">Estado</span>
+      <span class="val"><span class="${badgeClass(req.estado)}" style="font-size:11px">${req.estado}</span></span>
+    </div>
+  `;
+}
+
+function renderAltasList(req) {
+  const altas = req.altas || [];
+  document.getElementById('altas-badge').textContent = altas.length;
+
+  if (!altas.length) {
+    document.getElementById('altas-list-container').innerHTML =
+      '<div class="no-altas">No hay altas registradas para este requerimiento.</div>';
+    return;
+  }
+
+  document.getElementById('altas-list-container').innerHTML = `
+    <div style="overflow-x:auto">
+      <table class="altas-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Fecha Alta</th>
+            <th>Días</th>
+            <th>Patente</th>
+            <th>Transportista</th>
+            <th>Chofer</th>
+            <th>DNI</th>
+            <th>Celular</th>
+            <th>Email</th>
+            <th>Responsable</th>
+            <th>Satelital</th>
+            <th>Compañía Sat.</th>
+            <th>Contrato</th>
+            <th>ID Transp.</th>
+            <th>ID Chofer</th>
+            <th>ID Vehículo</th>
+            <th>Comentarios</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${altas.map((a, i) => `
+            <tr>
+              <td style="font-weight:700;color:var(--calypso-dark)">${i+1}</td>
+              <td>${formatDate(a.fechaAlta)}</td>
+              <td class="td-days">${a.diasContratacion}d</td>
+              <td style="font-weight:700">${a.patente}</td>
+              <td>${a.razonSocial}</td>
+              <td>${a.chofer}</td>
+              <td>${a.dni}</td>
+              <td>${a.celular}</td>
+              <td>${a.email || '—'}</td>
+              <td>${a.responsable}</td>
+              <td><span class="badge ${a.satelital==='SI'?'badge-comp':'badge-pend'}">${a.satelital}</span></td>
+              <td>${a.companiasat || '—'}</td>
+              <td>${a.contrato}</td>
+              <td style="font-family:monospace;font-size:11px">${a.idTransportista}</td>
+              <td style="font-family:monospace;font-size:11px">${a.idChofer}</td>
+              <td style="font-family:monospace;font-size:11px">${a.idVehiculo}</td>
+              <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;color:var(--gray-500)">${a.comentarios || '—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function daysBetween(dateStrA, dateStrB) {
+  const a = new Date(dateStrA + 'T00:00:00');
+  const b = new Date(dateStrB + 'T00:00:00');
+  return Math.max(0, Math.round((b - a) / 86400000));
+}
+
+function submitAlta() {
+  const req = ALL_DATA.find(r => r.reqId === CURRENT_REQ_ID);
+  if (!req) return;
+
+  // Check no quedan pendientes
+  if (req.cantCont >= req.cantReq) {
+    showToast('Este requerimiento ya está completo. No quedan unidades pendientes.', false);
+    return;
+  }
+
+  // Read fields
+  const fechaAlta    = document.getElementById('a-fecha').value;
+  const patente      = document.getElementById('a-patente').value.trim().toUpperCase();
+  const razonSocial  = document.getElementById('a-razonsocial').value.trim();
+  const chofer       = document.getElementById('a-chofer').value.trim();
+  const dni          = document.getElementById('a-dni').value.trim();
+  const celular      = document.getElementById('a-celular').value.trim();
+  const email        = document.getElementById('a-email').value.trim();
+  const responsable  = document.getElementById('a-resp').value;
+  const satelital    = document.querySelector('input[name="satelital"]:checked')?.value || 'NO';
+  const companiasat  = satelital === 'SI' ? document.getElementById('a-sat-company').value : '';
+  const contrato     = document.getElementById('a-contrato').value;
+  const idTransportista = document.getElementById('a-id-transp').value.trim();
+  const idChofer     = document.getElementById('a-id-chofer').value.trim();
+  const idVehiculo   = document.getElementById('a-id-vehiculo').value.trim();
+  const comentarios  = document.getElementById('a-comentarios').value.trim();
+
+  // Validations
+  const errores = [];
+  if (!fechaAlta)       errores.push('Fecha de Alta');
+  if (!patente)         errores.push('Patente');
+  if (!razonSocial)     errores.push('Razón Social');
+  if (!chofer)          errores.push('Nombre y Apellido Chofer');
+  if (!dni)             errores.push('DNI');
+  if (!celular)         errores.push('Celular');
+  if (!responsable)     errores.push('Responsable');
+  if (!contrato)        errores.push('Tipo de Contrato');
+  if (!idTransportista) errores.push('ID Transportista');
+  if (!idChofer)        errores.push('ID Chofer');
+  if (!idVehiculo)      errores.push('ID Vehículo');
+  if (satelital === 'SI' && !companiasat) errores.push('Compañía Satelital');
+
+  if (errores.length) {
+    showToast(`Completá: ${errores.slice(0,3).join(', ')}${errores.length > 3 ? '...' : ''}.`, false);
+    return;
+  }
+
+  // Validate fecha alta >= fecha requerimiento
+  if (fechaAlta < req.fecha) {
+    showToast('La fecha de alta no puede ser anterior a la fecha del requerimiento.', false);
+    return;
+  }
+
+  // Calculate days
+  const diasContratacion = daysBetween(req.fecha, fechaAlta);
+
+  // Build alta object
+  const alta = {
+    fechaAlta, patente, razonSocial, chofer, dni, celular, email,
+    responsable, satelital, companiasat, contrato,
+    idTransportista, idChofer, idVehiculo, comentarios,
+    diasContratacion
+  };
+
+  // Update requerimiento
+  if (!req.altas) req.altas = [];
+  req.altas.push(alta);
+  req.cantCont += 1;
+
+  // Recalculate avg days from all altas
+  req.dias = Math.round(req.altas.reduce((s, a) => s + a.diasContratacion, 0) / req.altas.length);
+
+  // Update estado
+  if (req.cantCont >= req.cantReq) {
+    req.estado = 'Completado';
+  } else if (req.cantCont > 0) {
+    req.estado = 'En Proceso';
+  }
+
+  saveData();
+  syncToSheets('new_alta', {
+    reqId: req.reqId,
+    req:   { cantCont: req.cantCont, estado: req.estado, dias: req.dias },
+    alta
+  });
+  applyFilters();
+
+  // Refresh panel
+  renderAltasSummary(req);
+  renderAltasList(req);
+
+  // Clear form fields (leave fecha and responsable)
+  ['a-patente','a-razonsocial','a-chofer','a-dni','a-celular','a-email',
+   'a-id-transp','a-id-chofer','a-id-vehiculo','a-comentarios'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('a-contrato').value = '';
+  document.getElementById('a-sat-company').value = '';
+  document.querySelectorAll('input[name="satelital"]').forEach(r => r.checked = r.value === 'NO');
+  document.getElementById('sat-company-wrap').classList.add('disabled');
+
+  const quedanPendientes = req.cantReq - req.cantCont;
+  if (req.estado === 'Completado') {
+    showToast(`✅ Alta grabada. Requerimiento ${req.reqId} COMPLETADO.`, true);
+  } else {
+    showToast(`Alta grabada correctamente. Quedan ${quedanPendientes} unidad${quedanPendientes > 1 ? 'es' : ''} pendiente${quedanPendientes > 1 ? 's' : ''}.`, true);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REPORTING MODULE
+═══════════════════════════════════════════════════════════════ */
+let REPORTING_ACTIVE = false;
+
+function toggleReporting() {
+  REPORTING_ACTIVE = !REPORTING_ACTIVE;
+  const mainEl  = document.querySelector('.main');
+  const repEl   = document.getElementById('reporting-panel');
+  const btnRep  = document.getElementById('btn-reporting');
+  const titleEl = document.getElementById('header-page-title');
+
+  if (REPORTING_ACTIVE) {
+    mainEl.style.display  = 'none';
+    repEl.classList.add('visible');
+    btnRep.classList.add('active');
+    btnRep.textContent = '← Dashboard';
+    titleEl.textContent = 'Reporting';
+    populateRepFilters();
+    renderReporting();
+  } else {
+    mainEl.style.display  = '';
+    repEl.classList.remove('visible');
+    btnRep.classList.remove('active');
+    btnRep.textContent = '📊 Reporting';
+    titleEl.textContent = 'Gestión de Contrataciones';
+  }
+}
+
+function populateRepFilters() {
+  const rfReg = document.getElementById('rf-region');
+  rfReg.innerHTML = '<option value="">Todas</option>';
+  Object.keys(REGIONES_SUCURSALES).forEach(r => rfReg.innerHTML += `<option value="${r}">${r}</option>`);
+
+  const rfSuc = document.getElementById('rf-sucursal');
+  rfSuc.innerHTML = '<option value="">Todas</option>';
+  Object.values(REGIONES_SUCURSALES).flat().sort().forEach(s => rfSuc.innerHTML += `<option value="${s}">${s}</option>`);
+
+  const rfResp = document.getElementById('rf-resp');
+  rfResp.innerHTML = '<option value="">Todos</option>';
+  RESPONSABLES.forEach(r => rfResp.innerHTML += `<option value="${r}">${r}</option>`);
+}
+
+function clearRepFilters() {
+  ['rf-periodo','rf-region','rf-sucursal','rf-resp','rf-contrato'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  renderReporting();
+}
+
+// Returns flat array of altas enriched with req metadata, applying filters
+function getFilteredAltas() {
+  const periodo  = document.getElementById('rf-periodo').value;
+  const region   = document.getElementById('rf-region').value;
+  const sucursal = document.getElementById('rf-sucursal').value;
+  const resp     = document.getElementById('rf-resp').value;
+  const contrato = document.getElementById('rf-contrato').value;
+  const today    = new Date(); today.setHours(0,0,0,0);
+
+  const result = [];
+  ALL_DATA.forEach(req => {
+    if (region   && req.region   !== region)   return;
+    if (sucursal && req.sucursal !== sucursal)  return;
+    const altas = req.altas || [];
+    altas.forEach(a => {
+      if (resp     && a.responsable !== resp)     return;
+      if (contrato && a.contrato    !== contrato)  return;
+      if (periodo) {
+        const altaDate = new Date(a.fechaAlta + 'T00:00:00');
+        if (periodo === 'hoy'    && altaDate.toDateString() !== today.toDateString()) return;
+        if (periodo === 'semana' && altaDate < new Date(today.getTime() - 6*86400000)) return;
+        if (periodo === 'mes'    && altaDate < new Date(today.getTime() - 29*86400000)) return;
+      }
+      result.push({ ...a, reqId: req.reqId, fechaReq: req.fecha, region: req.region, sucursal: req.sucursal, categoria: req.categoria });
+    });
+  });
+  return result;
+}
+
+function renderReporting() {
+  const altas = getFilteredAltas();
+
+  // ─── KPIs ────────────────────────────────────────────────
+  const totalAltas = altas.length;
+  const avgDias    = totalAltas ? (altas.reduce((s,a) => s + a.diasContratacion, 0) / totalAltas).toFixed(1) : '—';
+  const totalPend  = ALL_DATA.reduce((s, r) => s + Math.max(0, r.cantReq - r.cantCont), 0);
+  const totalReqs  = ALL_DATA.length;
+
+  document.getElementById('rk-altas').textContent = totalAltas;
+  document.getElementById('rk-dias').textContent  = avgDias !== '—' ? avgDias + 'd' : '—';
+  document.getElementById('rk-pend').textContent  = totalPend;
+  document.getElementById('rk-reqs').textContent  = totalReqs;
+
+  // ─── Aggregations ─────────────────────────────────────────
+  const byResp = {};
+  RESPONSABLES.forEach(r => byResp[r] = { altas: 0, sumDias: 0, pendUnidades: 0 });
+
+  altas.forEach(a => {
+    if (!byResp[a.responsable]) byResp[a.responsable] = { altas: 0, sumDias: 0, pendUnidades: 0 };
+    byResp[a.responsable].altas++;
+    byResp[a.responsable].sumDias += a.diasContratacion;
+  });
+
+  // Pendientes por responsable (del requerimiento, no del alta)
+  ALL_DATA.forEach(req => {
+    const pend = Math.max(0, req.cantReq - req.cantCont);
+    if (pend > 0 && req.responsable) {
+      if (!byResp[req.responsable]) byResp[req.responsable] = { altas: 0, sumDias: 0, pendUnidades: 0 };
+      byResp[req.responsable].pendUnidades += pend;
+    }
+  });
+
+  const byResp_arr = Object.entries(byResp)
+    .map(([name, d]) => ({ name, altas: d.altas, avgDias: d.altas ? +(d.sumDias / d.altas).toFixed(1) : 0, pend: d.pendUnidades }))
+    .filter(d => d.altas > 0 || d.pend > 0);
+
+  // By Sucursal
+  const bySuc = {};
+  altas.forEach(a => {
+    if (!bySuc[a.sucursal]) bySuc[a.sucursal] = { altas: 0 };
+    bySuc[a.sucursal].altas++;
+  });
+  const bySuc_arr = Object.entries(bySuc).map(([name, d]) => ({ name, altas: d.altas }))
+    .sort((a,b) => b.altas - a.altas);
+
+  // ─── Charts ───────────────────────────────────────────────
+  const maxAltasResp = Math.max(...byResp_arr.map(d => d.altas), 1);
+  const maxDiasResp  = Math.max(...byResp_arr.map(d => d.avgDias), 1);
+  const maxPendResp  = Math.max(...byResp_arr.map(d => d.pend), 1);
+  const maxAltasSuc  = Math.max(...bySuc_arr.map(d => d.altas), 1);
+
+  renderBarChart('chart-resp-altas',
+    byResp_arr.sort((a,b) => b.altas - a.altas),
+    d => d.altas, maxAltasResp, 'c1',
+    d => d.name, d => `${d.altas}`, 'bar-label');
+
+  renderBarChart('chart-resp-dias',
+    byResp_arr.filter(d => d.avgDias > 0).sort((a,b) => a.avgDias - b.avgDias),
+    d => d.avgDias, maxDiasResp, 'c3',
+    d => d.name, d => `${d.avgDias}d`, 'bar-label');
+
+  renderBarChart('chart-resp-pend',
+    byResp_arr.filter(d => d.pend > 0).sort((a,b) => b.pend - a.pend),
+    d => d.pend, maxPendResp, 'c4',
+    d => d.name, d => `${d.pend}`, 'bar-label');
+
+  renderBarChart('chart-suc-altas',
+    bySuc_arr,
+    d => d.altas, maxAltasSuc, 'c2',
+    d => d.name, d => `${d.altas}`, 'bar-label suc');
+
+  // ─── Detail table ──────────────────────────────────────────
+  const altasSorted = [...altas].sort((a,b) => a.responsable.localeCompare(b.responsable) || a.fechaAlta.localeCompare(b.fechaAlta));
+  document.getElementById('rep-rec-count').textContent = `${altasSorted.length} altas registradas`;
+
+  const tbody = document.getElementById('rep-table-body');
+  if (!altasSorted.length) {
+    tbody.innerHTML = `<tr><td colspan="21"><div class="no-data-rep">📋 No hay altas registradas con los filtros seleccionados.</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = altasSorted.map(a => `
+    <tr>
+      <td>${a.reqId}</td>
+      <td>${formatDate(a.fechaReq)}</td>
+      <td>${a.region}</td>
+      <td>${a.sucursal}</td>
+      <td>${a.categoria}</td>
+      <td>${formatDate(a.fechaAlta)}</td>
+      <td class="td-days">${a.diasContratacion}d</td>
+      <td style="font-weight:700">${a.patente}</td>
+      <td>${a.razonSocial}</td>
+      <td>${a.chofer}</td>
+      <td>${a.dni}</td>
+      <td>${a.celular}</td>
+      <td>${a.email || '—'}</td>
+      <td>${a.responsable}</td>
+      <td><span class="badge ${a.satelital==='SI'?'badge-comp':'badge-pend'}">${a.satelital}</span></td>
+      <td>${a.companiasat || '—'}</td>
+      <td>${a.contrato}</td>
+      <td style="font-family:monospace;font-size:11px">${a.idTransportista}</td>
+      <td style="font-family:monospace;font-size:11px">${a.idChofer}</td>
+      <td style="font-family:monospace;font-size:11px">${a.idVehiculo}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;color:var(--gray-500)">${a.comentarios || '—'}</td>
+    </tr>`).join('');
+}
+
+function renderBarChart(containerId, data, valFn, maxVal, colorClass, labelFn, dispFn, labelClass) {
+  const el = document.getElementById(containerId);
+  if (!data.length) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray-500);font-size:13px">Sin datos en el período</div>';
+    return;
+  }
+  el.innerHTML = data.slice(0,12).map(d => {
+    const pct = maxVal > 0 ? Math.max(4, Math.round((valFn(d) / maxVal) * 100)) : 4;
+    return `
+      <div class="bar-row">
+        <div class="${labelClass}" title="${labelFn(d)}">${labelFn(d)}</div>
+        <div class="bar-track">
+          <div class="bar-fill ${colorClass}" style="width:${pct}%">
+            <span class="bar-val">${dispFn(d)}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ─── EXCEL EXPORT ───────────────────────────────────────────── */
+function exportToExcel() {
+  const altas = getFilteredAltas();
+  if (!altas.length) {
+    showToast('No hay datos para exportar con los filtros actuales.', false);
+    return;
+  }
+
+  const headers = [
+    'ID Requerimiento','Fecha Solicitud','Región','Sucursal','Categoría Vehículo',
+    'Fecha Alta','Días Contratación','Patente','Razón Social Transportista',
+    'Nombre Chofer','DNI Chofer','Celular','Email','Responsable',
+    'Instaló Satelital','Compañía Satelital','Tipo Contrato',
+    'ID Transportista','ID Chofer','ID Vehículo','Comentarios'
+  ];
+
+  const rows = altas.map(a => [
+    a.reqId, a.fechaReq, a.region, a.sucursal, a.categoria,
+    a.fechaAlta, a.diasContratacion, a.patente, a.razonSocial,
+    a.chofer, a.dni, a.celular, a.email || '',
+    a.responsable, a.satelital, a.companiasat || '',
+    a.contrato, a.idTransportista, a.idChofer, a.idVehiculo,
+    a.comentarios || ''
+  ]);
+
+  const wsData = [headers, ...rows];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:12},{wch:14},{wch:10},{wch:18},{wch:20},
+    {wch:12},{wch:8},{wch:10},{wch:28},
+    {wch:22},{wch:12},{wch:16},{wch:26},{wch:20},
+    {wch:10},{wch:14},{wch:14},
+    {wch:14},{wch:14},{wch:14},{wch:30}
+  ];
+
+  // Header style (SheetJS CE doesn't support full style, but sets freeze)
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Altas de Vehículos');
+
+  // Summary sheet
+  const summaryByResp = {};
+  altas.forEach(a => {
+    if (!summaryByResp[a.responsable]) summaryByResp[a.responsable] = { altas: 0, sumDias: 0 };
+    summaryByResp[a.responsable].altas++;
+    summaryByResp[a.responsable].sumDias += a.diasContratacion;
+  });
+  const summaryRows = [
+    ['Responsable','Total Altas','Días Promedio'],
+    ...Object.entries(summaryByResp).map(([name, d]) => [
+      name, d.altas, +(d.sumDias / d.altas).toFixed(1)
+    ])
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(summaryRows);
+  ws2['!cols'] = [{wch:24},{wch:14},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen por Responsable');
+
+  const fecha = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `OCASA_Altas_Contrataciones_${fecha}.xlsx`);
+  showToast(`Exportado: ${altas.length} altas → Excel`, true);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════════ */
+function showToast(msg, success = true) {
+  const toast = document.getElementById('toast');
+  toast.className = `toast ${success ? 'success' : 'error'}`;
+  document.getElementById('toast-icon').textContent = success ? '✓' : '✕';
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
+</script>
+
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay hidden" id="loading-overlay">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+    <span style="font-size:28px">OCASA<span style="color:var(--calypso-alt)">↗</span></span>
+    <div class="spinner"></div>
+    <div class="loading-msg" id="loading-msg">Cargando datos desde Google Sheets...</div>
+    <div class="loading-sub" id="loading-sub">Conectando con el servidor</div>
+  </div>
+</div>
+
+</body>
+</html>
