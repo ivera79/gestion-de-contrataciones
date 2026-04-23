@@ -374,6 +374,24 @@
     .td-reqid { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: var(--calypso-dark); }
     thead th.th-reqid { color: var(--calypso-dark); }
 
+    /* ─── MODIFY BUTTON ──────────────────────────────────────── */
+    .btn-modify {
+      display: none; align-items: center; gap: 8px;
+      background: var(--calypso-dark); color: #fff; border: none;
+      padding: 12px 22px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 700; letter-spacing: .3px;
+      box-shadow: 0 4px 16px rgba(5,101,113,.3); transition: var(--transition);
+    }
+    .btn-modify.visible { display: flex; }
+    .btn-modify:hover { background: var(--calypso); transform: translateY(-1px); }
+    .btn-modify svg { width: 16px; height: 16px; }
+
+    /* ─── SORT HEADERS ───────────────────────────────────────── */
+    thead th.sortable { cursor: pointer; user-select: none; }
+    thead th.sortable:hover { background: var(--gray-100); color: var(--calypso-dark); }
+    .sort-icon { display: inline-block; margin-left: 4px; opacity: .35; font-size: 10px; }
+    thead th.sort-asc .sort-icon, thead th.sort-desc .sort-icon { opacity: 1; color: var(--calypso); }
+
     /* ─── GESTIONAR ALTAS BUTTON ────────────────────────────── */
     .btn-altas {
       display: none; align-items: center; gap: 8px;
@@ -648,9 +666,13 @@
           <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Gestionar Altas
         </button>
+        <button class="btn-modify" id="btn-modify" onclick="openModifyModal()">
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          Modificar
+        </button>
         <button class="btn-delete" id="btn-delete" onclick="confirmDeleteSelected()">
           <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-          Eliminar Requerimiento
+          Eliminar
         </button>
         <button class="btn-new" onclick="openModal()">
           <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -746,16 +768,16 @@
           <thead>
             <tr>
               <th class="cb-cell"><input type="checkbox" class="cb-all" id="cb-all" onchange="toggleAllCheckboxes(this)" title="Seleccionar todos"/></th>
-              <th class="th-reqid">ID Req.</th>
-              <th>Fecha Solicitud</th>
-              <th>Región</th>
-              <th>Sucursal</th>
-              <th>Categoría Vehículo</th>
-              <th>Cant. Req.</th>
-              <th>Cant. Cont.</th>
-              <th>Estado</th>
-              <th>Responsable</th>
-              <th>Días Cont.</th>
+              <th class="th-reqid sortable" onclick="sortBy('reqId')">ID Req.<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('fecha')">Fecha Solicitud<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('region')">Región<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('sucursal')">Sucursal<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('categoria')">Categoría Vehículo<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('cantReq')">Cant. Req.<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('cantCont')">Cant. Cont.<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('estado')">Estado<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('responsable')">Responsable<span class="sort-icon">⇅</span></th>
+              <th class="sortable" onclick="sortBy('dias')">Días Cont.<span class="sort-icon">⇅</span></th>
               <th>Comentarios</th>
             </tr>
           </thead>
@@ -924,8 +946,8 @@
   <div class="modal">
     <div class="modal-head">
       <div>
-        <h2>Cargar Nuevo Requerimiento</h2>
-        <p>Completá los datos del vehículo solicitado</p>
+        <h2 id="modal-title">Cargar Nuevo Requerimiento</h2>
+        <p id="modal-subtitle">Completá los datos del vehículo solicitado</p>
       </div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
@@ -1207,6 +1229,25 @@ document.getElementById('inp-user').addEventListener('keydown', e => { if (e.key
 ═══════════════════════════════════════════════════════════════ */
 let ALL_DATA = [];
 let FILTERED  = [];
+let SORT_STATE = { col: null, dir: 'asc' };
+
+/* ═══════════════════════════════════════════════════════════════
+   DATA MIGRATION
+═══════════════════════════════════════════════════════════════ */
+function migrateData() {
+  let changed = false;
+  ALL_DATA = ALL_DATA.map(r => {
+    if (r.responsable === 'Jazming Magallanes') { r.responsable = 'Jazmin Magallanes'; changed = true; }
+    if (r.altas) {
+      r.altas = r.altas.map(a => {
+        if (a.responsable === 'Jazming Magallanes') { a.responsable = 'Jazmin Magallanes'; changed = true; }
+        return a;
+      });
+    }
+    return r;
+  });
+  if (changed) saveData();
+}
 
 /* ═══════════════════════════════════════════════════════════════
    REQ ID COUNTER
@@ -1283,6 +1324,7 @@ async function initApp() {
   // 1. Dashboard visible inmediatamente con caché
   const cached = localStorage.getItem('ocasa_contrataciones');
   ALL_DATA = cached ? JSON.parse(cached) : [];
+  migrateData();
 
   populateFilters();
   populateModalDropdowns();
@@ -1384,10 +1426,53 @@ function applyFilters() {
     return true;
   });
 
-  FILTERED.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  applySortToFiltered();
   clearSelectionUI();
   renderScores();
   renderTable();
+}
+
+function applySortToFiltered() {
+  const { col, dir } = SORT_STATE;
+  if (!col) {
+    FILTERED.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    return;
+  }
+  FILTERED.sort((a, b) => {
+    let va = a[col], vb = b[col];
+    if (va === null || va === undefined) va = '';
+    if (vb === null || vb === undefined) vb = '';
+    if (typeof va === 'number' && typeof vb === 'number') return dir === 'asc' ? va - vb : vb - va;
+    return dir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+  });
+}
+
+function sortBy(col) {
+  if (SORT_STATE.col === col) {
+    SORT_STATE.dir = SORT_STATE.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    SORT_STATE.col = col;
+    SORT_STATE.dir = 'asc';
+  }
+  applySortToFiltered();
+  renderTable();
+  updateSortHeaders();
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = '⇅';
+  });
+  if (!SORT_STATE.col) return;
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    if (th.getAttribute('onclick') === `sortBy('${SORT_STATE.col}')`) {
+      th.classList.add(SORT_STATE.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      const icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = SORT_STATE.dir === 'asc' ? '▲' : '▼';
+    }
+  });
 }
 
 function clearFilters() {
@@ -1477,6 +1562,7 @@ function getSelectedIds() {
 function onCheckboxChange() {
   const selected = getSelectedIds();
   const btnDel   = document.getElementById('btn-delete');
+  const btnMod   = document.getElementById('btn-modify');
   const btnAltas = document.getElementById('btn-altas');
   const selCount = document.getElementById('sel-count');
 
@@ -1495,10 +1581,12 @@ function onCheckboxChange() {
     selCount.classList.remove('visible');
   }
 
-  // Gestionar Altas: solo disponible cuando se selecciona exactamente 1
+  // Modificar y Gestionar Altas: solo cuando se selecciona exactamente 1
   if (selected.length === 1) {
+    btnMod.classList.add('visible');
     btnAltas.classList.add('visible');
   } else {
+    btnMod.classList.remove('visible');
     btnAltas.classList.remove('visible');
   }
 
@@ -1513,6 +1601,7 @@ function toggleAllCheckboxes(masterCb) {
 
 function clearSelectionUI() {
   document.getElementById('btn-delete').classList.remove('visible');
+  document.getElementById('btn-modify').classList.remove('visible');
   document.getElementById('btn-altas').classList.remove('visible');
   document.getElementById('sel-count').classList.remove('visible');
 }
@@ -1550,8 +1639,13 @@ document.getElementById('modal-confirm').addEventListener('click', e => {
 /* ═══════════════════════════════════════════════════════════════
    MODAL NUEVO REQUERIMIENTO
 ═══════════════════════════════════════════════════════════════ */
+let EDIT_REQ_ID = null;
+
 function openModal() {
-  document.getElementById('modal').classList.add('open');
+  EDIT_REQ_ID = null;
+  document.getElementById('modal-title').textContent = 'Cargar Nuevo Requerimiento';
+  document.getElementById('modal-subtitle').textContent = 'Completá los datos del vehículo solicitado';
+  document.getElementById('btn-submit').textContent = 'Guardar Requerimiento';
   document.getElementById('m-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('m-region').value = '';
   document.getElementById('m-sucursal').innerHTML = '<option value="">Seleccionar sucursal...</option>';
@@ -1560,9 +1654,42 @@ function openModal() {
   document.getElementById('m-resp').value = '';
   document.getElementById('m-comentarios').value = '';
   updateCharCount();
+  document.getElementById('modal').classList.add('open');
 }
 
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function openModifyModal() {
+  const ids = getSelectedIds();
+  if (ids.length !== 1) return;
+  const req = ALL_DATA.find(r => r.reqId === ids[0]);
+  if (!req) return;
+  EDIT_REQ_ID = req.reqId;
+
+  document.getElementById('modal-title').textContent = `Modificar Requerimiento ${req.reqId}`;
+  document.getElementById('modal-subtitle').textContent = 'Editá los campos que necesitás cambiar';
+  document.getElementById('btn-submit').textContent = 'Guardar Cambios';
+
+  document.getElementById('m-fecha').value = req.fecha;
+
+  // Populate region and sucursal
+  const mReg = document.getElementById('m-region');
+  mReg.innerHTML = '<option value="">Seleccionar región...</option>';
+  Object.keys(REGIONES_SUCURSALES).forEach(r => mReg.innerHTML += `<option value="${r}">${r}</option>`);
+  mReg.value = req.region;
+
+  const mSuc = document.getElementById('m-sucursal');
+  mSuc.innerHTML = '<option value="">Seleccionar sucursal...</option>';
+  if (req.region) REGIONES_SUCURSALES[req.region].forEach(s => mSuc.innerHTML += `<option value="${s}">${s}</option>`);
+  mSuc.value = req.sucursal;
+
+  document.getElementById('m-tipo').value = req.categoria;
+  document.getElementById('m-cant').value = req.cantReq;
+  document.getElementById('m-resp').value = req.responsable;
+  document.getElementById('m-comentarios').value = req.comentarios || '';
+  updateCharCount();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { EDIT_REQ_ID = null; document.getElementById('modal').classList.remove('open'); }
 
 document.getElementById('modal').addEventListener('click', e => {
   if (e.target === document.getElementById('modal')) closeModal();
@@ -1594,22 +1721,57 @@ async function submitRequerimiento() {
   const btn = document.getElementById('btn-submit');
   btn.disabled = true; btn.textContent = 'Guardando...';
 
-  const reqId = getNextReqId();
-  const newRow = {
-    reqId, id: Date.now(),
-    fecha, region, sucursal, categoria: tipo,
-    cantReq: cant, cantCont: 0, estado: 'Pendiente',
-    responsable: resp, dias: null, comentarios: coment
-  };
+  if (EDIT_REQ_ID) {
+    // EDIT MODE
+    const req = ALL_DATA.find(r => r.reqId === EDIT_REQ_ID);
+    if (!req) { btn.disabled = false; btn.textContent = 'Guardar Cambios'; return; }
 
-  ALL_DATA.unshift(newRow);
-  saveData();
-  syncToSheets('new_req', { req: newRow });
+    // Warn if cant is reduced below cantCont
+    if (cant < req.cantCont) {
+      btn.disabled = false; btn.textContent = 'Guardar Cambios';
+      showToast(`La cantidad no puede ser menor a las ya contratadas (${req.cantCont}).`, false);
+      return;
+    }
 
-  btn.disabled = false; btn.textContent = 'Guardar Requerimiento';
-  closeModal();
-  applyFilters();
-  showToast(`Requerimiento ${reqId} guardado correctamente.`, true);
+    req.fecha       = fecha;
+    req.region      = region;
+    req.sucursal    = sucursal;
+    req.categoria   = tipo;
+    req.cantReq     = cant;
+    req.responsable = resp;
+    req.comentarios = coment;
+
+    // Recalculate estado
+    if (req.cantCont >= req.cantReq) req.estado = 'Completado';
+    else if (req.cantCont > 0)       req.estado = 'En Proceso';
+    else                             req.estado = 'Pendiente';
+
+    saveData();
+    syncToSheets('update_req', { reqId: req.reqId, req });
+
+    btn.disabled = false; btn.textContent = 'Guardar Cambios';
+    closeModal();
+    applyFilters();
+    showToast(`Requerimiento ${req.reqId} modificado correctamente.`, true);
+  } else {
+    // NEW MODE
+    const reqId = getNextReqId();
+    const newRow = {
+      reqId, id: Date.now(),
+      fecha, region, sucursal, categoria: tipo,
+      cantReq: cant, cantCont: 0, estado: 'Pendiente',
+      responsable: resp, dias: null, comentarios: coment
+    };
+
+    ALL_DATA.unshift(newRow);
+    saveData();
+    syncToSheets('new_req', { req: newRow });
+
+    btn.disabled = false; btn.textContent = 'Guardar Requerimiento';
+    closeModal();
+    applyFilters();
+    showToast(`Requerimiento ${reqId} guardado correctamente.`, true);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
